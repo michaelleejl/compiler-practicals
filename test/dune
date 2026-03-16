@@ -1,0 +1,3 @@
+(test
+ (name test_compilers)
+ (libraries compilers))
