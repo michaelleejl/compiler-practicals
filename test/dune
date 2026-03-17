@@ -1,3 +1,8 @@
-(test
+(library
  (name test_compilers)
- (libraries compilers))
+ (libraries compilers)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect)))
+
+(include_subdirs qualified)
