@@ -20,22 +20,7 @@ module Recogniser : sig
   val from_str_list : string list -> recogniser
   val recognise : recogniser -> string -> bool
 end
-(* 
-module type Matcher = sig
-  type matcher_state = { matched : char list; rest : char list }
-  type matcher = char list -> matcher_state outcome
 
-  val ( >& ) : matcher -> matcher -> matcher
-  val ( >| ) : matcher -> matcher -> matcher
-  val ( ~* ) : matcher -> matcher
-  val ( ~+ ) : matcher -> matcher
-  val ( ~? ) : matcher -> matcher
-  val str : string -> matcher
-  val ident : matcher
-  val literal : matcher
-  val whitespace : matcher
-end
-  *)
 
 module Lexer : (Lang : L) -> sig
   module Matcher : sig
@@ -75,6 +60,3 @@ module Lexer : (Lang : L) -> sig
   val from_tokens : lexer -> lexer
   val lex : lexer -> string -> token list
 end
-(* module type Generator = sig 
-
-end  *)
