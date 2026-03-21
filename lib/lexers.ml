@@ -127,14 +127,12 @@ module Combinator(Lang: L) = struct
 
   type matcher = Matcher.matcher 
 
-  let promote (m: matcher) ?(ignore = false) to_token { lexed; rest } =
+  let promote (m: matcher) to_token { lexed; rest } =
     match m rest with
     | Failure -> Failure
-    | Success { matched; rest } ->
-        if ignore then Success { lexed; rest }
-        else
-          let t = to_token matched in
-          Success { lexed = t :: lexed; rest }
+    | Success { matched; rest } -> 
+      let t = to_token matched in 
+      Success { lexed = t :: lexed; rest }
 
   let empty _ = Failure
   let epsilon s = Success s
@@ -159,6 +157,13 @@ module Combinator(Lang: L) = struct
   let ( ~~+ ) = plus
   let maybe l = l >>| epsilon
   let ( ~~? ) = maybe
+  
+  let whitespace { lexed; rest } =
+    match Matcher.whitespace rest with
+    | Failure -> Failure
+    | Success { matched; rest } -> Success { lexed = lexed; rest }
+          
+  let from_tokens ts = epsilon >>| ts >>& ~~*(whitespace >>& ts)
 
   let lex l s =
     let cs = String.to_list s in

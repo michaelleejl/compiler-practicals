@@ -73,7 +73,7 @@ module Combinator: (Lang: L) -> sig
   type lex_state = { lexed : token list; rest : char list }
   type lexer = lex_state -> lex_state outcome 
 
-  val promote : matcher -> ?ignore: bool -> (char list -> token) -> lexer
+  val promote : matcher -> (char list -> token) -> lexer
 
   val empty   : lexer
   val epsilon : lexer
@@ -82,6 +82,8 @@ module Combinator: (Lang: L) -> sig
   val ( ~~* )  : lexer -> lexer
   val ( ~~+ )  : lexer -> lexer
   val ( ~~? )  : lexer -> lexer
+
+  val from_tokens : lexer -> lexer 
 
   val lex : lexer -> string -> token list
 end

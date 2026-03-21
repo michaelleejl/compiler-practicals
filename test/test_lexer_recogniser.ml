@@ -11,7 +11,6 @@ let recognise_one =
   >| from_str_list operators 
   >| ident
   >| literal
-  >| whitespace
 
 let mlot_recogniser =
      epsilon 
@@ -19,10 +18,6 @@ let mlot_recogniser =
 
 let%expect_test _ =
   printf "%b" (recognise mlot_recogniser "fun");
-  [%expect {| true |}]
-
-let%expect_test _ =
-  printf "%b" (recognise mlot_recogniser " ");
   [%expect {| true |}]
 
 let%expect_test _ =

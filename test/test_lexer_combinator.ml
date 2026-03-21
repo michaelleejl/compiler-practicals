@@ -16,9 +16,6 @@ let literal =
   promote literal_m (fun cs ->
       NUM (cs |> Base.String.of_list |> Base.Int.of_string))
 
-let whitespace =
-  promote Matcher.whitespace (fun _ -> assert false) ~ignore:true
-
 let keywords =
   [
     ("let", fun _ -> LET);
@@ -40,13 +37,12 @@ let operators =
 
 let to_lexer xs =
   Base.List.fold xs ~init:empty ~f:(fun acc ->
-      fun (s, to_token) -> acc >>| promote (Matcher.from_str s) to_token ~ignore:false)
+      fun (s, to_token) -> acc >>| promote (Matcher.from_str s) to_token)
 
-let lex_one =
+let tokens =
   to_lexer keywords >>| to_lexer operators >>| ident >>| literal
-  >>| whitespace
 
-let mlot_lexer = epsilon >>| lex_one >>& ~~*(whitespace >>& lex_one)
+let mlot_lexer = from_tokens tokens 
 
 let print_token = fun x -> printf "%s ; " (Mlot_Token.to_str x)
 
