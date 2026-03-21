@@ -1,5 +1,6 @@
 module State = Int
 module StateSet = Set.Make (State)
+module CharSet = Set.Make (Char)
 
 module CharOpt = struct
   type t = char option
@@ -12,10 +13,11 @@ module CharOptMap = Map.Make (CharOpt)
 type state = StateSet.elt
 type state_set = StateSet.t
 type transition = state_set CharOptMap.t
+type char_set = CharSet.t 
 
 let merge _ x y = Some (StateSet.union x y)
 
-type nfa = { initial : state; finals : state_set; next : state -> transition }
+type nfa = { initial : state; finals : state_set; next : state -> transition; alphabet: char_set}
 
 let rn_shift ?(m = 1) n =
   {
@@ -24,6 +26,7 @@ let rn_shift ?(m = 1) n =
     next =
       (fun s ->
         CharOptMap.map (fun v -> StateSet.map (fun x -> x + m) v) (n.next (s - m)));
+    alphabet = n.alphabet;
   }
 
 let rn_even n =
@@ -33,6 +36,7 @@ let rn_even n =
     next =
       (fun s ->
         CharOptMap.map (fun v -> StateSet.map (fun x -> x * 2) v) (n.next (s / 2)));
+    alphabet = n.alphabet;
   }
 
 let rn_odd n =
@@ -44,10 +48,12 @@ let rn_odd n =
         CharOptMap.map
           (fun v -> StateSet.map (fun x -> (x * 2) + 1) v)
           (n.next ((s - 1) / 2)));
+    alphabet = n.alphabet;
   }
 
 let empty =
-  { initial = 0; finals = StateSet.singleton 1; next = (fun _ -> CharOptMap.empty) }
+  { initial = 0; finals = StateSet.singleton 1; next = (fun _ -> CharOptMap.empty);
+    alphabet = CharSet.empty; }
 
 let epsilon =
   {
@@ -57,6 +63,7 @@ let epsilon =
       (fun s ->
         if s = 0 then CharOptMap.singleton None (StateSet.singleton 1)
         else CharOptMap.empty);
+    alphabet = CharSet.empty;
   }
 
 let one_of cs =
@@ -69,6 +76,7 @@ let one_of cs =
           CharOptMap.of_list
             (List.map (fun x -> (Some x, StateSet.singleton 1)) cs)
         else CharOptMap.empty);
+    alphabet = CharSet.of_list cs;
   }
 
 let alt n0 n1 =
@@ -86,12 +94,14 @@ let alt n0 n1 =
         CharOptMap.union merge m
           (CharOptMap.singleton None (StateSet.singleton 1))
       else m
-  in
-  { initial = 0; finals = StateSet.singleton 1; next }
+    in
+  let alphabet = CharSet.union n0'.alphabet n1'.alphabet in
+  { initial = 0; finals = StateSet.singleton 1; next; alphabet; }
 
 let seq n0 n1 =
   let n0' = rn_even n0 in
   let n1' = rn_odd n1 in
+  let alphabet = CharSet.union n0'.alphabet n1'.alphabet in
   {
     initial = n0'.initial;
     finals = n1'.finals;
@@ -102,6 +112,7 @@ let seq n0 n1 =
           CharOptMap.union merge m
             (CharOptMap.singleton None (StateSet.singleton n1'.initial))
         else m);
+    alphabet;
   }
 
 let kleene n =
@@ -120,6 +131,7 @@ let kleene n =
               (CharOptMap.singleton None (StateSet.of_list [ n'.initial; 1 ]))
               m
           else m);
+    alphabet = n.alphabet;
   }
 
 let epsilon_step next q =
@@ -130,21 +142,21 @@ let epsilon_steps next qs =
     (fun q -> fun acc -> StateSet.union acc (epsilon_step next q))
     qs qs
 
-let rec epsilon_closure next qs =
-  let qs' = epsilon_steps next qs in
-  if StateSet.equal qs' qs then qs else epsilon_closure next qs'
+let rec epsilon_closure n qs =
+  let qs' = epsilon_steps n.next qs in
+  if StateSet.equal qs' qs then qs else epsilon_closure n qs'
 
-let char_step next q c =
-  try CharOptMap.find (Some c) (next q) with Not_found -> StateSet.empty
+let char_step n q c =
+  try CharOptMap.find (Some c) (n.next q) with Not_found -> StateSet.empty
 
-let step next qs c =
-  let curr_states = epsilon_closure next qs in
-  StateSet.fold
-    (fun q -> fun acc -> StateSet.union acc (char_step next q c))
-    curr_states StateSet.empty
+let step n qs c =
+  let next_states = StateSet.fold
+    (fun q -> fun acc -> StateSet.union acc (char_step n q c))
+    qs StateSet.empty in 
+  epsilon_closure n next_states
 
 let accept n s =
   let cs = Base.String.to_list s in
-  let es = List.fold_left (step n.next) (StateSet.singleton n.initial) cs in
-  let end_states = epsilon_closure n.next es in
-  StateSet.fold (fun q -> fun acc -> StateSet.mem q n.finals || acc) end_states false
+  let initials = epsilon_closure n (StateSet.singleton n.initial) in 
+  let es = List.fold_left (step n) initials cs in
+  StateSet.fold (fun q -> fun acc -> StateSet.mem q n.finals || acc) es false

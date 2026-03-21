@@ -1,9 +1,13 @@
 type state = int 
 module StateSet: Set.S with type elt = state 
-module CharOptMap : Map.S with type key = char option
-type transition = StateSet.t CharOptMap.t
+module CharSet : Set.S with type elt = char 
 
-type nfa  = { initial : state; finals : StateSet.t; next : state -> transition }
+module CharOptMap : Map.S with type key = char option
+
+type transition = StateSet.t CharOptMap.t
+type state_set = StateSet.t 
+type char_set = CharSet.t 
+type nfa  = { initial : state; finals : state_set; next : state -> transition; alphabet: char_set }
 
 val empty : nfa
 val epsilon : nfa
@@ -12,3 +16,6 @@ val alt : nfa -> nfa -> nfa
 val seq : nfa -> nfa -> nfa
 val kleene : nfa -> nfa
 val accept : nfa -> string -> bool
+
+val epsilon_closure : nfa -> state_set -> state_set
+val step: nfa -> state_set -> char -> state_set
