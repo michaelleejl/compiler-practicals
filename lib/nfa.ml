@@ -1,5 +1,3 @@
-open Regex 
-
 module State = Int
 module StateSet = Set.Make(State)
 
@@ -54,11 +52,11 @@ let epsilon = {
                 else CharOptMap.empty;
 }
 
-let single c = {
+let one_of cs = {
   q0 = 0;
   f = StateSet.singleton 1;
   d = fun s -> if s = 0 then 
-                CharOptMap.singleton (Some c) (StateSet.singleton 1) 
+                CharOptMap.of_list (List.map (fun x -> (Some(x), StateSet.singleton 1)) cs) 
                 else CharOptMap.empty;
 }
 
@@ -123,14 +121,6 @@ let kleene n =
             )
   }
 
- let rec compile r = match r with 
-   | Empty -> empty
-   | Epsilon -> epsilon
-   | Char c -> single c 
-   | Alt(r1, r2) -> alt (compile r1) (compile r2)
-   | Seq(r1, r2) -> seq (compile r1) (compile r2)
-   | Kleene r -> kleene (compile r) 
-
 let epsilon_step d q = 
   try CharOptMap.find None (d q) 
   with Not_found -> StateSet.empty
@@ -140,7 +130,7 @@ let epsilon_steps d qs =
 
 let rec epsilon_closure d qs = 
   let qs' = epsilon_steps d qs in 
-  if qs' = qs then qs else epsilon_closure d qs' 
+  if StateSet.equal qs' qs then qs else epsilon_closure d qs' 
 
 let char_step d q c = 
   try CharOptMap.find (Some c) (d q) 
