@@ -21,7 +21,6 @@ module Recogniser : sig
   val recognise : recogniser -> string -> bool
 end
 
-
 module Lexer : (Lang : L) -> sig
   module Matcher : sig
     type matcher_state = { matched : char list; rest : char list }

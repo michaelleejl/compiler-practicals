@@ -6,12 +6,10 @@ let operators = parse {|=|\+|->|(|)|}
 let ident = parse "[a-zA-Z][a-zA-Z0-9]*"
 let literal = parse "-?[0-9]+"
 let whitespace = parse {|\s|}
+let recognise_one = keywords >| operators >| ident >| literal
 
-let recognise_one =
-  keywords >| operators >| ident >| literal
-
-let mlot_recogniser = generate (epsilon >| recognise_one >& ~*(whitespace >& recognise_one))
-
+let mlot_recogniser =
+  generate (epsilon >| recognise_one >& ~*(whitespace >& recognise_one))
 
 let%expect_test _ =
   printf "%b" (recognise mlot_recogniser "fun");
