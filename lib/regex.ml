@@ -22,6 +22,7 @@ type t = C.t rgx
 let empty = Empty
 let epsilon = Epsilon
 let chr c = Char (C.singleton c)
+let chrs cs = Char cs 
 
 let alt r1 r2 =
   match (r1, r2) with
@@ -90,7 +91,7 @@ module Parse = struct
   type t =
     | Empty
     | Epsilon
-    | Char of char
+    | Char of C.t
     | Alt of t * t
     | Seq of t * t
     | Kleene of t
@@ -98,6 +99,8 @@ module Parse = struct
     | Opt of t
     | Any
     | Bracketed of Bracket.t
+
+  let whitespace = C.of_list (Char.[chr 32; chr 12; chr 10; chr 13; chr 9]) 
 
   let parse_bracketed s =
     match s with
@@ -119,7 +122,9 @@ module Parse = struct
     | '[' :: rest -> Some (parse_bracketed rest)
     | [] | (')' | '|' | '*' | '+' | '?') :: _ -> None
     | '.' :: cs -> Some (Any, cs)
-    | c :: cs -> Some (Char c, cs)
+    | '\\'::'s'::cs -> Some(Char(whitespace), cs)
+    | '\\'::c::cs -> raise Failure
+    | c :: cs -> Some (Char (C.singleton c), cs)
 
   and parse_suffixed s =
     match parse_atom s with
@@ -143,14 +148,18 @@ module Parse = struct
         (Alt (r, r'), rest')
     | r, rest -> (r, rest)
 
-  let parse s =
-    let cs = Base.String.to_list s in
+  let parse cs =
     match parse_alt cs with r, [] -> r | r, _ -> raise Failure
 
+  let rec to_alt = function 
+    | [] -> []
+    | [x] -> [x]
+    | x::y::xs -> x::'|'::y::'|'::(to_alt xs)
+    
   let rec interpret = function
     | Empty -> empty
     | Epsilon -> epsilon
-    | Char c -> chr c
+    | Char cs -> chrs cs
     | Alt (r1, r2) -> alt (interpret r1) (interpret r2)
     | Seq (r1, r2) -> seq (interpret r1) (interpret r2)
     | Kleene r -> kleene (interpret r)
@@ -160,4 +169,4 @@ module Parse = struct
     | Bracketed b -> Char (Bracket.interpret b)
 end
 
-let parse s = Parse.(interpret (parse s))
+let parse s = Parse.(interpret (parse (Base.String.to_list s)))
