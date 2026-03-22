@@ -1,8 +1,8 @@
 open Compilers.Lexing.Combinators
 open Compilers.Intfs
 open Compilers.Mlot
+open Mlot_Token
 open Printf
-open Compilers.Mlot.Mlot_Token
 open Lexer (Mlot)
 
 let ident_m = Matcher.(alphabetic >& ~*alphanumeric)
