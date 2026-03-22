@@ -25,7 +25,6 @@ val seq : t -> t -> t
 val kleene : t -> t
 val accept : t -> string -> bool
 val initialise : t -> state_set
-val is_final : t -> state -> bool
+val is_accepting : t -> state_set -> bool
 val is_rejecting : t -> state_set -> bool
-val contains_final : t -> state_set -> bool
 val step : t -> state_set -> char -> state_set

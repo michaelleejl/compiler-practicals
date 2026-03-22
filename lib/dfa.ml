@@ -41,7 +41,7 @@ let determinise n =
         let dfa_state = gen_state () in
         let mapping = M.add nfa_state dfa_state mapping in
         let finals =
-          if Nfa.contains_final n nfa_state then StateSet.add dfa_state finals
+          if Nfa.is_accepting n nfa_state then StateSet.add dfa_state finals
           else finals
         in
         let states = StateSet.add dfa_state states in

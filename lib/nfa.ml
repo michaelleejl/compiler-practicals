@@ -192,10 +192,10 @@ let step n qs c =
 let is_final n q = StateSet.mem q n.finals
 let is_rejecting n qs = StateSet.is_empty qs
 
-let contains_final n qs =
+let is_accepting n qs =
   StateSet.fold (fun q acc -> is_final n q || acc) qs false
 
 let accept n s =
   let cs = Base.String.to_list s in
   let es = List.fold_left (step n) (initialise n) cs in
-  contains_final n es
+  is_accepting n es
