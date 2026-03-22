@@ -28,10 +28,12 @@ module Lexer (Lang : L) (Tag : T with type token = Lang.token) = struct
   type token = Lang.token
   type m = Regex.t
 
-  module TaggedNfa = Tnfa.Make (Tag)
+  module TaggedDfa = Tdfa.Make (Tag)
+  module TaggedNfa = TaggedDfa.TaggedNfa
 
   type tag = Tag.t
-  type t = TaggedNfa.t
+  type s = TaggedNfa.t 
+  type t = TaggedDfa.t
 
   module Matcher = struct
     open Regex
@@ -48,17 +50,19 @@ module Lexer (Lang : L) (Tag : T with type token = Lang.token) = struct
     let parse = parse
   end
 
-  open TaggedNfa
+  open TaggedDfa
 
-  let create matcher tag = lift (Regex.compile matcher) tag
-  let ( >>| ) = alt
+  let create matcher tag = TaggedNfa.lift (Regex.compile matcher) tag
+  let ( >>| ) = TaggedNfa.alt
+
+  let determinise = determinise 
 
   type lexing_state = {
-    state : state_set;
+    state : state;
     rest : char list;
     tokens : token list;
     buffer : char list;
-    last_accepting : (int * state_set) option;
+    last_accepting : (int * state) option;
   }
 
   let lex_step machine { state; rest; tokens; buffer; last_accepting } =
