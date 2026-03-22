@@ -1,5 +1,6 @@
 type state = int
 
+module State = Int
 module StateSet : Set.S with type elt = state
 module CharSet : Set.S with type elt = char
 module CharOptMap : Map.S with type key = char option
@@ -9,6 +10,7 @@ type state_set = StateSet.t
 type char_set = CharSet.t
 
 type t = {
+  states : state_set;
   initial : state;
   finals : state_set;
   next : state -> transition;
@@ -24,5 +26,6 @@ val kleene : t -> t
 val accept : t -> string -> bool
 val initialise : t -> state_set
 val is_final : t -> state -> bool
+val is_rejecting : t -> state_set -> bool
 val contains_final : t -> state_set -> bool
 val step : t -> state_set -> char -> state_set

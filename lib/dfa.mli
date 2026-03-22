@@ -9,6 +9,7 @@ type char_set = CharSet.t
 type transition = state CharMap.t
 
 type t = {
+  states : state_set;
   initial : state;
   finals : state_set;
   next : state -> transition;

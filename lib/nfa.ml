@@ -18,6 +18,7 @@ type char_set = CharSet.t
 let merge _ x y = Some (StateSet.union x y)
 
 type t = {
+  states : state_set;
   initial : state;
   finals : state_set;
   next : state -> transition;
@@ -26,6 +27,7 @@ type t = {
 
 let rn_shift ?(m = 1) n =
   {
+    states = StateSet.map (fun s -> s + m) n.states;
     initial = n.initial + m;
     finals = StateSet.map (( + ) m) n.finals;
     next =
@@ -38,6 +40,7 @@ let rn_shift ?(m = 1) n =
 
 let rn_even n =
   {
+    states = StateSet.map (fun s -> s * 2) n.states;
     initial = n.initial * 2;
     finals = StateSet.map (fun s -> s * 2) n.finals;
     next =
@@ -50,6 +53,7 @@ let rn_even n =
 
 let rn_odd n =
   {
+    states = StateSet.map (fun s -> (s * 2) + 1) n.states;
     initial = (n.initial * 2) + 1;
     finals = StateSet.map (fun s -> (s * 2) + 1) n.finals;
     next =
@@ -62,6 +66,7 @@ let rn_odd n =
 
 let empty =
   {
+    states = StateSet.of_list [ 0; 1 ];
     initial = 0;
     finals = StateSet.singleton 1;
     next = (fun _ -> CharOptMap.empty);
@@ -70,6 +75,7 @@ let empty =
 
 let epsilon =
   {
+    states = StateSet.of_list [ 0; 1 ];
     initial = 0;
     finals = StateSet.singleton 1;
     next =
@@ -81,6 +87,7 @@ let epsilon =
 
 let one_of cs =
   {
+    states = StateSet.of_list [ 0; 1 ];
     initial = 0;
     finals = StateSet.singleton 1;
     next =
@@ -95,6 +102,11 @@ let one_of cs =
 let alt n0 n1 =
   let n0' = rn_even (rn_shift ~m:2 n0) in
   let n1' = rn_odd (rn_shift ~m:2 n1) in
+  let states =
+    StateSet.union
+      (StateSet.union n0'.states n1'.states)
+      (StateSet.of_list [ 0; 1 ])
+  in
   let initials = StateSet.of_list [ n0'.initial; n1'.initial ] in
   let finals = StateSet.union n0'.finals n1'.finals in
   let next' = fun s -> if s mod 2 = 0 then n0'.next s else n1'.next s in
@@ -109,13 +121,15 @@ let alt n0 n1 =
       else m
   in
   let alphabet = CharSet.union n0'.alphabet n1'.alphabet in
-  { initial = 0; finals = StateSet.singleton 1; next; alphabet }
+  { states; initial = 0; finals = StateSet.singleton 1; next; alphabet }
 
 let seq n0 n1 =
   let n0' = rn_even n0 in
   let n1' = rn_odd n1 in
+  let states = StateSet.union n0'.states n1'.states in
   let alphabet = CharSet.union n0'.alphabet n1'.alphabet in
   {
+    states;
     initial = n0'.initial;
     finals = n1'.finals;
     next =
@@ -130,7 +144,9 @@ let seq n0 n1 =
 
 let kleene n =
   let n' = rn_shift ~m:2 n in
+  let states = StateSet.union (StateSet.of_list [ 0; 1 ]) n'.states in
   {
+    states;
     initial = 0;
     finals = StateSet.singleton 1;
     next =
@@ -174,6 +190,7 @@ let step n qs c =
   epsilon_closure n next_states
 
 let is_final n q = StateSet.mem q n.finals
+let is_rejecting n qs = StateSet.is_empty qs
 
 let contains_final n qs =
   StateSet.fold (fun q acc -> is_final n q || acc) qs false

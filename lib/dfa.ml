@@ -9,6 +9,7 @@ type char_set = CharSet.t
 type transition = state CharMap.t
 
 type t = {
+  states : state_set;
   initial : state;
   finals : state_set;
   next : state -> transition;
@@ -33,9 +34,9 @@ let determinise n =
       next_state := s + 1;
       s
   in
-  let rec build nfa_state (mapping, transitions, finals) =
+  let rec build nfa_state (mapping, states, transitions, finals) =
     match M.find nfa_state mapping with
-    | dfa_state -> (dfa_state, mapping, transitions, finals)
+    | dfa_state -> (dfa_state, mapping, states, transitions, finals)
     | exception Not_found ->
         let dfa_state = gen_state () in
         let mapping = M.add nfa_state dfa_state mapping in
@@ -43,26 +44,29 @@ let determinise n =
           if Nfa.contains_final n nfa_state then StateSet.add dfa_state finals
           else finals
         in
+        let states = StateSet.add dfa_state states in
         let find_next_state = Nfa.step n nfa_state in
-        let builder c (m, t, f) =
+        let builder c (m, s, t, f) =
           let next_state = find_next_state c in
-          let dfa_next_state, m', t', f' = build next_state (m, t, f) in
+          let dfa_next_state, m', s', t', f' = build next_state (m, s, t, f) in
           let t'' = add_transition (dfa_state, c, dfa_next_state) t' in
-          (m', t'', f')
+          let s'' = StateSet.add dfa_next_state s' in
+          (m', s'', t'', f')
         in
-        let mapping', transitions', finals' =
-          Nfa.CharSet.fold builder n.alphabet (mapping, transitions, finals)
+        let mapping', states', transitions', finals' =
+          Nfa.CharSet.fold builder n.alphabet
+            (mapping, states, transitions, finals)
         in
-        (dfa_state, mapping', transitions', finals')
+        (dfa_state, mapping', states', transitions', finals')
   in
-  let initial, _, transitions, finals =
-    build nfa_initial (M.empty, StateMap.empty, StateSet.empty)
+  let initial, _, states, transitions, finals =
+    build nfa_initial (M.empty, StateSet.empty, StateMap.empty, StateSet.empty)
   in
   let next s =
     try StateMap.find s transitions with Not_found -> CharMap.empty
   in
   let alphabet = n.alphabet in
-  { initial; finals; next; alphabet }
+  { states; initial; finals; next; alphabet }
 
 let accept d s =
   let cs = Base.String.to_list s in
