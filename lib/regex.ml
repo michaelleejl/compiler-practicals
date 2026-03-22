@@ -130,6 +130,8 @@ module Parse = struct
     | '.' :: cs -> Some (Any, cs)
     | '\\' :: 's' :: cs -> Some (Char whitespace, cs)
     | '\\' :: '+' :: cs -> Some (Char (C.singleton '+'), cs)
+    | '\\' :: '(' :: cs -> Some (Char (C.singleton '('), cs)
+    | '\\' :: ')' :: cs -> Some (Char (C.singleton ')'), cs)
     | '\\' :: c :: cs -> raise Failure
     | c :: cs -> Some (Char (C.singleton c), cs)
 
