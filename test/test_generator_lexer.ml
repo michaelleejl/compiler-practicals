@@ -1,0 +1,89 @@
+open Compilers.Intfs.Tags
+open Compilers.Lexing.Generators
+open Compilers.Mlot
+open Mlot_Token
+open Printf
+
+module Tag = struct
+  type t =
+    | T_TRUE
+    | T_FALSE
+    | T_FUN
+    | T_ARROW
+    | T_LPARAN
+    | T_RPARAN
+    | T_PLUS
+    | T_LET
+    | T_EQUALS
+    | T_IN
+    | T_REC
+    | T_IDENT
+    | T_NUM
+    | T_SKIP
+
+  type token = Mlot_Token.t
+
+  let compare = compare
+
+  let tag_to_action = function
+    | T_TRUE -> fun _ -> Some TRUE
+    | T_FALSE -> fun _ -> Some FALSE
+    | T_FUN -> fun _ -> Some FUN
+    | T_ARROW -> fun _ -> Some ARROW
+    | T_LPARAN -> fun _ -> Some LPARAN
+    | T_RPARAN -> fun _ -> Some RPARAN
+    | T_PLUS -> fun _ -> Some PLUS
+    | T_LET -> fun _ -> Some LET
+    | T_EQUALS -> fun _ -> Some EQUALS
+    | T_IN -> fun _ -> Some IN
+    | T_REC -> fun _ -> Some REC
+    | T_IDENT -> fun cs -> Some (IDENT (Base.String.of_list cs))
+    | T_NUM ->
+        fun cs -> Some (NUM (cs |> Base.String.of_list |> Base.Int.of_string))
+    | T_SKIP -> fun _ -> None
+end
+
+open Lexer (Mlot) (Tag)
+
+let p = Matcher.parse
+
+let keywords =
+  create (p "let") T_LET
+  >>| create (p "rec") T_REC
+  >>| create (p "in") T_IN
+  >>| create (p "fun") T_FUN
+  >>| create (p "true") T_TRUE
+  >>| create (p "false") T_FALSE
+
+let operators =
+  create (p "=") T_EQUALS
+  >>| create (p {|\+|}) T_PLUS
+  >>| create (p "->") T_ARROW
+  >>| create (p {|\(|}) T_LPARAN
+  >>| create (p {|\)|}) T_RPARAN
+
+let ident = create (p "[a-zA-Z][a-zA-Z0-9]*") T_IDENT
+let literal = create (p "-?[0-9]+") T_NUM
+let whitespace = create (p {|\s|}) T_SKIP
+let mlot_lexer = keywords >>| operators >>| ident >>| literal >>| whitespace
+let print_token x = printf "%s ; " (Mlot_Token.to_str x)
+
+let%expect_test _ =
+  List.iter print_token (lex mlot_lexer "x");
+  [%expect {| IDENT x ; |}]
+
+let%expect_test _ =
+  List.iter print_token (lex mlot_lexer "fun");
+  [%expect {| FUN ; |}]
+
+let%expect_test _ =
+  List.iter print_token (lex mlot_lexer "fun ->");
+  [%expect {| FUN ; ARROW ; |}]
+
+let%expect_test _ =
+  List.iter print_token (lex mlot_lexer "fun x -> 2");
+  [%expect {| FUN ; IDENT x ; ARROW ; NUM 2 ; |}]
+
+let%expect_test _ =
+  List.iter print_token (lex mlot_lexer "fun x2 -> 2");
+  [%expect {| FUN ; IDENT x2 ; ARROW ; NUM 2 ; |}]
