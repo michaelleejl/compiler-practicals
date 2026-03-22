@@ -65,7 +65,8 @@ let operators =
 let ident = create (p "[a-zA-Z][a-zA-Z0-9]*") T_IDENT
 let literal = create (p "-?[0-9]+") T_NUM
 let whitespace = create (p {|\s|}) T_SKIP
-let mlot_lexer = keywords >>| operators >>| ident >>| literal >>| whitespace
+let mlot_lexer_nfa = keywords >>| operators >>| ident >>| literal >>| whitespace
+let mlot_lexer = determinise mlot_lexer_nfa
 let print_token x = printf "%s ; " (Mlot_Token.to_str x)
 
 let%expect_test _ =
