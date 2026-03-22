@@ -23,7 +23,7 @@ end
 module Lexer (Lang : L) (Tag : T with type token = Lang.token) : sig
   type m
   type t
-  type s 
+  type s
   type tag = Tag.t
   type token = Lang.token
 
@@ -41,9 +41,8 @@ module Lexer (Lang : L) (Tag : T with type token = Lang.token) : sig
   end
 
   val create : m -> tag -> s
-  val ( >>| ) : s -> s -> s 
-  val determinise : s -> t 
-  
+  val ( >>| ) : s -> s -> s
+  val determinise : s -> t
   val lex : t -> string -> token list
 
   (* 

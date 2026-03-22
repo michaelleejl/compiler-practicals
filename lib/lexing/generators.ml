@@ -32,7 +32,7 @@ module Lexer (Lang : L) (Tag : T with type token = Lang.token) = struct
   module TaggedNfa = TaggedDfa.TaggedNfa
 
   type tag = Tag.t
-  type s = TaggedNfa.t 
+  type s = TaggedNfa.t
   type t = TaggedDfa.t
 
   module Matcher = struct
@@ -54,8 +54,7 @@ module Lexer (Lang : L) (Tag : T with type token = Lang.token) = struct
 
   let create matcher tag = TaggedNfa.lift (Regex.compile matcher) tag
   let ( >>| ) = TaggedNfa.alt
-
-  let determinise = determinise 
+  let determinise = determinise
 
   type lexing_state = {
     state : state;
