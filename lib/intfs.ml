@@ -23,20 +23,12 @@ module Language = struct
   end
 end
 
-module type Language = (T : Token) (A : Ast) -> sig
-  type token = T.t
-  type ast = A.node
-  type fparam = A.fparam
+module Tags = struct
+  module type T = sig
+    type t
+    type token
+
+    val compare : t -> t -> int
+    val tag_to_action : t -> char list -> token option
+  end
 end
-(* 
-module type Lexer = (L: Language) -> sig
-  exception LexFailure
-
-  val lex : string -> L.Token.t list
-end
-
-module type Parser = (L: Language) -> sig
-  exception ParseFailure
-
-  val parse : L.Token.t list -> L.Ast.node
-end *)
