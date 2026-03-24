@@ -6,6 +6,9 @@ open Printf
 
 module Tag = struct
   type t =
+    | T_SKIP
+    | T_IDENT
+    | T_NUM
     | T_TRUE
     | T_FALSE
     | T_FUN
@@ -17,9 +20,6 @@ module Tag = struct
     | T_EQUALS
     | T_IN
     | T_REC
-    | T_IDENT
-    | T_NUM
-    | T_SKIP
 
   type token = Mlot_Token.t
 

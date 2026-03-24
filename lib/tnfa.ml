@@ -132,7 +132,7 @@ module Make (Tag : T) = struct
     let alphabet = CharSet.union tn0'.alphabet tn1'.alphabet in
     let tagger =
       StateMap.union
-        (fun _ t1 t2 -> if t1 < t2 then Some t1 else Some t2)
+        (fun _ t1 t2 -> if t1 > t2 then Some t1 else Some t2)
         tn0'.tagger tn1'.tagger
     in
     {
@@ -161,6 +161,6 @@ module Make (Tag : T) = struct
         | v -> (
             match acc with
             | None -> Some v
-            | Some v' -> if v < v' then Some v else acc))
+            | Some v' -> if v > v' then Some v else acc))
       None state_list
 end
