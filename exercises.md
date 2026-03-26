@@ -58,4 +58,27 @@ _In this section, we will build recogniser and lexer combinators._
    
    As described in lecture, this function should consume characters. When a failure state is reached, we should emit the token corresponding to the last accepting state, and then continue lexing. 
 
-  
+  ## Parsing 
+  1. Consider the following language 
+     $$
+      \begin{array}{rcl}
+      e & ::= & x \mid n \in \mathbb{N} \mid b \in \mathbb{B} \mid (e) \mid e_1 \, e_2 \mid e_1 + e_2 \mid e_1 = e_2 \\
+      && \mid \texttt{fun} \, x \to e \mid \texttt{let} \, x = e_1 \, \texttt{in} \, e_2 \mid \texttt{let} \,\texttt{rec} \, x = e_1 \, \texttt{in} \, e_2 
+      \end{array}$$
+     For each of the following expressions, show that there are two different parses:
+
+     a) $e_1 \, e_2 \, e_3$
+
+     b) $\texttt{fun} \, x \to e_1 + e_2 $
+
+2. Eliminate ambiguity in the language above. Do this by dividing the language above into simple expressions ($s$), terms ($t$), and expressions ($e$), such simple expressions are terms, and terms are expressions, as such:
+    $$\begin{array}{rcl}
+      s & := & s \,\, \text{rules}\\
+      t & := & s \mid t \,\, \text{rules}\\
+      e & := & t \mid e \,\, \text{rules}
+    \end{array}$$
+    Thus, if asked to produce an expresson $e$, it suffices to produce a term $t$. However, simple expressions, terms, and expressions are ordered as follows: when trying to create an expression $e$, we will only try to create a term $t$ if none of the $e$ rules match. Similarly, when trying to create a term $t$, we will only try to create a simple expression $s$ if none of the $t$ rules match. 
+
+    With reference to question 1, show how your new rules eliminate ambiguity. 
+
+3. Refactor your grammar in question 2 to eliminate left-recursion
