@@ -19,7 +19,8 @@ end
 
 open Intfs
 
-module Lexer (Lang : Language.S) (Tag : Tags.S with type token = Lang.token) = struct
+module Lexer (Lang : Language.S) (Tag : Tags.S with type token = Lang.token) =
+struct
   module TaggedDfa = Tdfa.Make (Tag)
   module TaggedNfa = TaggedDfa.TaggedNfa
 

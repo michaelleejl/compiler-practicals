@@ -1,0 +1,4 @@
+(library
+ (name ppx_lexparse)
+ (kind ppx_rewriter)
+ (libraries ppxlib))

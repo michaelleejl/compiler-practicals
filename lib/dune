@@ -1,5 +1,7 @@
 (library
  (name lexparse)
- (libraries fmt base))
+ (libraries fmt base)
+ (preprocess
+  (pps ppx_lexparse ppx_jane)))
 
 (include_subdirs qualified)
